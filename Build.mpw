@@ -1,0 +1,84 @@
+# MPW Build Script for USBODE
+# For use with Macintosh Programmer's Workshop
+# This is an alternative to the Makefile for pure MPW environments
+
+Set Echo 1
+Set Exit 0
+
+# Configuration
+Set AppName "USBODE"
+Set ObjDir ":obj:"
+Set BinDir ":bin:"
+
+# Create directories if they don't exist
+If !`Exists {ObjDir}`
+    NewFolder {ObjDir}
+End
+
+If !`Exists {BinDir}`
+    NewFolder {BinDir}
+End
+
+# Compile C source
+Echo "Compiling USBODE.c..."
+SC USBODE.c ¶
+    -w 2 ¶
+    -opt speed ¶
+    -b 4 ¶
+    -o {ObjDir}USBODE.c.o ¶
+    || Set Status {Status}
+
+If {Status} != 0
+    Echo "### Compilation failed ###"
+    Exit {Status}
+End
+
+# Compile resources
+Echo "Compiling resources..."
+Rez USBODE.r ¶
+    -o {AppName}.rsrc ¶
+    -i : ¶
+    || Set Status {Status}
+
+If {Status} != 0
+    Echo "### Resource compilation failed ###"
+    Exit {Status}
+End
+
+# Link
+Echo "Linking..."
+Link ¶
+    -w ¶
+    -c 'USBO' ¶
+    -t 'APPL' ¶
+    {ObjDir}USBODE.c.o ¶
+    "{SharedLibraries}InterfaceLib" ¶
+    "{SharedLibraries}StdCLib" ¶
+    "{SharedLibraries}MathLib" ¶
+    "{PPCLibraries}StdCRuntime.o" ¶
+    "{PPCLibraries}PPCCRuntime.o" ¶
+    "{PPCLibraries}PPCToolLibs.o" ¶
+    -o {BinDir}{AppName} ¶
+    || Set Status {Status}
+
+If {Status} != 0
+    Echo "### Link failed ###"
+    Exit {Status}
+End
+
+# Add resources to application
+Echo "Adding resources..."
+Rez -a {AppName}.rsrc ¶
+    -o {BinDir}{AppName} ¶
+    || Set Status {Status}
+
+If {Status} != 0
+    Echo "### Adding resources failed ###"
+    Exit {Status}
+End
+
+# Set file type and creator
+Echo "Setting file attributes..."
+SetFile -c 'USBO' -t 'APPL' {BinDir}{AppName}
+
+Echo "Build complete! Application is in {BinDir}{AppName}"

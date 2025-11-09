@@ -1,0 +1,147 @@
+# USBODE Quick Reference Card
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                  USBODE DISC MANAGER v1.0                       │
+│              Classic Mac OS Edition (PPC Only)                  │
+└─────────────────────────────────────────────────────────────────┘
+
+╔═══════════════════════════════════════════════════════════════╗
+║ KEYBOARD SHORTCUTS                                            ║
+╠═══════════════════════════════════════════════════════════════╣
+║ ⌘Q          Quit application                                  ║
+║ ⌘R          Refresh disc list                                 ║
+║ ⌘M          Mount selected disc (enhanced UI)                 ║
+║ ↑/↓         Navigate disc list (enhanced UI)                  ║
+║ Return      Mount selected disc (enhanced UI)                 ║
+╚═══════════════════════════════════════════════════════════════╝
+
+╔═══════════════════════════════════════════════════════════════╗
+║ SCSI PROTOCOL COMMANDS                                        ║
+╠═══════════════════════════════════════════════════════════════╣
+║ 0xD9        LIST DEVICES    - Get device types                ║
+║ 0xDA        NUMBER OF CDS   - Get disc count (max 100)        ║
+║ 0xD0/0xD7   LIST FILES/CDS  - Get disc details                ║
+║ 0xD8        SET NEXT CD     - Mount disc at index             ║
+╚═══════════════════════════════════════════════════════════════╝
+
+╔═══════════════════════════════════════════════════════════════╗
+║ FILE STRUCTURE                                                ║
+╠═══════════════════════════════════════════════════════════════╣
+║ USBODE.c          Main application code                       ║
+║ USBODE_UI.c       Enhanced UI (optional)                      ║
+║ USBODE_Simple.c   Single-file version                         ║
+║ USBODE.h          Header definitions                          ║
+║ USBODE.r          Resource file (menus, dialogs)              ║
+╚═══════════════════════════════════════════════════════════════╝
+
+╔═══════════════════════════════════════════════════════════════╗
+║ BUILDING                                                      ║
+╠═══════════════════════════════════════════════════════════════╣
+║ CodeWarrior:  Create PPC project, add files, build            ║
+║ MPW:          Run "Build.mpw" script                          ║
+║ Make:         Run "make" (requires CodeWarrior tools)         ║
+╚═══════════════════════════════════════════════════════════════╝
+
+╔═══════════════════════════════════════════════════════════════╗
+║ COMPILER FLAGS                                                ║
+╠═══════════════════════════════════════════════════════════════╣
+║ -proc 604           Target PowerPC 604                        ║
+║ -opt speed          Optimize for speed                        ║
+║ -align powerpc      PowerPC alignment                         ║
+║ -bool on            Enable bool type                          ║
+╚═══════════════════════════════════════════════════════════════╝
+
+╔═══════════════════════════════════════════════════════════════╗
+║ DISC ENTRY STRUCTURE (39 bytes)                              ║
+╠═══════════════════════════════════════════════════════════════╣
+║ Offset  Size  Field                                           ║
+║ ------  ----  -----                                           ║
+║ 0       1     Index (0-99)                                    ║
+║ 1       1     Type (0=file)                                   ║
+║ 2       33    Name (null-terminated, max 32 chars)            ║
+║ 35      5     Size (40-bit big-endian, [0]=0x00)              ║
+╚═══════════════════════════════════════════════════════════════╝
+
+╔═══════════════════════════════════════════════════════════════╗
+║ EXAMPLE: EXTRACTING SIZE                                      ║
+╠═══════════════════════════════════════════════════════════════╣
+║ unsigned long size =                                          ║
+║     ((unsigned long)entry.size[1] << 24) |                    ║
+║     ((unsigned long)entry.size[2] << 16) |                    ║
+║     ((unsigned long)entry.size[3] << 8)  |                    ║
+║     ((unsigned long)entry.size[4]);                           ║
+╚═══════════════════════════════════════════════════════════════╝
+
+╔═══════════════════════════════════════════════════════════════╗
+║ SCSI MANAGER SEQUENCE                                         ║
+╠═══════════════════════════════════════════════════════════════╣
+║ 1. SCSIGet()           - Acquire bus                          ║
+║ 2. SCSISelect(id)      - Select device                        ║
+║ 3. SCSICmd(cdb, len)   - Send command                         ║
+║ 4. SCSIRead(buffer)    - Read data (if needed)                ║
+║ 5. SCSIComplete(...)   - Complete & release                   ║
+╚═══════════════════════════════════════════════════════════════╝
+
+╔═══════════════════════════════════════════════════════════════╗
+║ TROUBLESHOOTING                                               ║
+╠═══════════════════════════════════════════════════════════════╣
+║ Device not found:                                             ║
+║   • Check SCSI connections                                    ║
+║   • Verify SCSI ID (default 0)                                ║
+║   • Check termination                                         ║
+║                                                               ║
+║ Build errors:                                                 ║
+║   • Need CodeWarrior Pro 4+ or MPW                            ║
+║   • Require Universal Interfaces 3.4+                         ║
+║   • PowerPC target only (no 68k)                              ║
+║                                                               ║
+║ Runtime errors:                                               ║
+║   • Increase app memory (Get Info)                            ║
+║   • Check Mac OS version ≥ 7.5.3                              ║
+║   • Verify SCSI Manager present                               ║
+╚═══════════════════════════════════════════════════════════════╝
+
+╔═══════════════════════════════════════════════════════════════╗
+║ SYSTEM REQUIREMENTS                                           ║
+╠═══════════════════════════════════════════════════════════════╣
+║ CPU:      PowerPC (601, 603, 604, G3, G4)                     ║
+║ OS:       Mac OS 7.5.3 - 9.2.2                                ║
+║ Memory:   256 KB minimum, 512 KB recommended                  ║
+║ SCSI:     Built-in or card, terminated chain                  ║
+║ Device:   USBODE hardware                                     ║
+╚═══════════════════════════════════════════════════════════════╝
+
+╔═══════════════════════════════════════════════════════════════╗
+║ RESOURCE IDs                                                  ║
+╠═══════════════════════════════════════════════════════════════╣
+║ Creator:  'USBO'                                              ║
+║ Type:     'APPL'                                              ║
+║ MenuBar:  128                                                 ║
+║ Window:   128                                                 ║
+║ Alerts:   128 (About), 129 (Error)                            ║
+║ Icon:     128                                                 ║
+╚═══════════════════════════════════════════════════════════════╝
+
+╔═══════════════════════════════════════════════════════════════╗
+║ DOCUMENTATION                                                 ║
+╠═══════════════════════════════════════════════════════════════╣
+║ README.md      - Project overview                             ║
+║ BUILD.md       - Detailed build instructions                  ║
+║ PROTOCOL.md    - SCSI protocol specification                  ║
+║ USERGUIDE.md   - End-user manual                              ║
+╚═══════════════════════════════════════════════════════════════╝
+
+╔═══════════════════════════════════════════════════════════════╗
+║ TIPS                                                          ║
+╠═══════════════════════════════════════════════════════════════╣
+║ • Maximum 100 disc images supported                           ║
+║ • Disc names limited to 32 characters                         ║
+║ • Use descriptive names for easy identification               ║
+║ • Refresh list after modifying USBODE contents                ║
+║ • Keep frequently-used discs near top of list                 ║
+╚═══════════════════════════════════════════════════════════════╝
+
+                      ©2025 USBODE Project
+                   Classic Mac OS Edition v1.0
+```
